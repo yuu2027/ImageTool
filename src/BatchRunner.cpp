@@ -4,6 +4,7 @@
 #include "ImageProcessor.h"
 #include <filesystem> // ファイルやフォルダの存在確認などをする
 #include <string>
+#include <opencv2/core.hpp>
 
 namespace fs = std::filesystem;
 
@@ -61,7 +62,9 @@ bool BatchRunner::run(const Config& config)
 
         fs::path outputPath = outputDir / file.filename();
 
-        if (!processor.process(file, outputPath)) Logger::error("処理失敗: " + file.string());
+        cv::Mat image = processor.load(file);
+        cv::Mat result = processor.transform(image);
+        if (!processor.save(outputPath, result)) Logger::error("処理失敗: " + file.string());
     }
 
     Logger::info("一括処理が完了しました");
