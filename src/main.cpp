@@ -1,17 +1,23 @@
-#include <iostream>
+#include "BatchRunner.h"
 #include "Config.h"
+#include "Logger.h"
+#include <iostream>
 
 int main(int argc, char* argv[])
 {
     Config config;
 
     if (!ConfigParser::parse(argc, argv, config)) {
-        std::cout << "使い方: imgtool --input <入力フォルダ> --output <出力フォルダ>" << std::endl;
+        Logger::error("使い方: imgtool --input <入力フォルダ> --output <出力フォルダ>");
         return 1;
     }
 
-    std::cout << "input: " << config.inputDir << std::endl;
-    std::cout << "output: " << config.outputDir << std::endl;
+    BatchRunner runner;
+
+    if (!runner.run(config)) {
+        Logger::error("処理に失敗しました");
+        return 1;
+    }
 
     return 0;
 }
