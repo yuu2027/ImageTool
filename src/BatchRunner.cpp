@@ -37,6 +37,8 @@ bool BatchRunner::run(const Config& config)
         Logger::info("出力フォルダを作成しました: " + outputDir.string());
     }
     
+    // auto：型の自動推論
+    // 画像ファイルのパスの一覧
     auto files = FileScanner::scanImages(inputDir);
 
     Logger::info("画像数: " + std::to_string(files.size()));
