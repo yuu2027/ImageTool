@@ -56,19 +56,15 @@ bool BatchRunner::run(const Config& config)
 
     ImageProcessor processor;
 
-    int successCount = 0;
-    int failCount = 0;
-
     for (const auto& file : files) {
         Logger::info("見つかった画像: " + file.string());
 
         fs::path outputPath = outputDir / file.filename();
 
-        if (processor.process(file, outputPath)) successCount++;
-        else failCount++;
+        if (!processor.process(file, outputPath)) Logger::error("処理失敗: " + file.string());
     }
 
-    Logger::info("コピー成功回数: " + std::to_string(successCount) + " コピー失敗回数: " + std::to_string(failCount));
+    Logger::info("一括処理が完了しました");
 
     return true;
 }
