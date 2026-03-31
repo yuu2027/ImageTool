@@ -41,6 +41,12 @@ bool BatchRunner::run(const Config& config)
     // 画像ファイルのパスの一覧
     auto files = FileScanner::scanImages(inputDir);
 
+    // 画像が0件の場合失敗
+    if (files.empty()) {
+        Logger::error("画像が見つかりませんでした");
+        return false;
+    }
+
     Logger::info("画像数: " + std::to_string(files.size()));
 
     for (const auto& file : files) {
