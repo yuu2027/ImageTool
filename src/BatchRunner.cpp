@@ -1,6 +1,7 @@
 #include "BatchRunner.h"
 #include "Logger.h"
 #include "FileScanner.h"
+#include "ImageProcessor.h"
 #include <filesystem> // ファイルやフォルダの存在確認などをする
 #include <string>
 
@@ -12,8 +13,6 @@ bool BatchRunner::run(const Config& config)
     fs::path inputDir = config.inputDir;
     fs::path outputDir = config.outputDir;
 
-
-
     // そのパスが存在するか．bool値
     if (!fs::exists(inputDir)) { 
         Logger::error("入力フォルダが存在しません: " + inputDir.string());
@@ -23,6 +22,12 @@ bool BatchRunner::run(const Config& config)
     // そのパスがフォルダかどうか．bool値
     if (!fs::is_directory(inputDir)) { 
         Logger::error("入力パスがフォルダではありません: " + inputDir.string());
+        return false;
+    }
+
+    // 出力フォルダが存在するがフォルダではないとき
+    if (fs::exists(outputDir) && !fs::is_directory(outputDir)) {
+        Logger::error("出力パスがフォルダではありません: " + outputDir.string());
         return false;
     }
 
@@ -49,10 +54,21 @@ bool BatchRunner::run(const Config& config)
 
     Logger::info("画像数: " + std::to_string(files.size()));
 
+    ImageProcessor processor;
+
+    int successCount = 0;
+    int failCount = 0;
+
     for (const auto& file : files) {
         Logger::info("見つかった画像: " + file.string());
+
+        fs::path outputPath = outputDir / file.filename();
+
+        if (processor.process(file, outputPath)) successCount++;
+        else failCount++;
     }
 
+    Logger::info("コピー成功回数: " + std::to_string(successCount) + " コピー失敗回数: " + std::to_string(failCount));
 
     return true;
 }

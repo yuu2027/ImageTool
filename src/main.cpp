@@ -1,6 +1,7 @@
 #include "BatchRunner.h"
 #include "Config.h"
 #include "Logger.h"
+#include "ImageProcessor.h"
 #include <iostream>
 
 int main(int argc, char* argv[])
