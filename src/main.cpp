@@ -2,7 +2,9 @@
 #include "Config.h"
 #include "Logger.h"
 #include "ImageProcessor.h"
+#include "NameGenerator.h"
 #include <iostream>
+#include <string>
 
 int main(int argc, char* argv[])
 {
@@ -19,6 +21,6 @@ int main(int argc, char* argv[])
         Logger::error("ˆ—‚É¸”s‚µ‚Ü‚µ‚½");
         return 1;
     }
-
+    
     return 0;
 }

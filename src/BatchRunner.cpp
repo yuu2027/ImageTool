@@ -2,8 +2,10 @@
 #include "Logger.h"
 #include "FileScanner.h"
 #include "ImageProcessor.h"
+#include "NameGenerator.h"
 #include <filesystem> // ファイルやフォルダの存在確認などをする
 #include <string>
+#include <iostream>
 #include <opencv2/core.hpp>
 
 namespace fs = std::filesystem;
@@ -57,10 +59,19 @@ bool BatchRunner::run(const Config& config)
 
     ImageProcessor processor;
 
+    NameGenerator generator(config, config.outputDir);
+
+    if (config.renameMode == RenameMode::Keep) {
+        std::cout << "Keep" << std::endl;
+    }
+    else {
+        std::cout << "Seq" << std::endl;
+    }
+
     for (const auto& file : files) {
         Logger::info("見つかった画像: " + file.string());
 
-        fs::path outputPath = outputDir / file.filename();
+        fs::path outputPath = generator.generate(file);
 
         cv::Mat image = processor.load(file);
         cv::Mat result = processor.transform(image);

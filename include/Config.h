@@ -2,10 +2,18 @@
 #define CONFIG_H 
 
 #include <string> // 文字列を扱うためのライブラリ
+#include <filesystem>
+
+enum class RenameMode {
+    Keep,
+    Seq
+};
 
 struct Config { // アプリケーションの実行設定を保持する構造体
     std::string inputDir; // 入力フォルダのパスを保存するための変数
     std::string outputDir; // 出力フォルダのパスを保存するための変数
+    RenameMode renameMode = RenameMode::Keep;
+    std::string prefix;
 };
 
 class ConfigParser { // コマンドライン引数を解析して Config を構築するクラス

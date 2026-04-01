@@ -1,5 +1,8 @@
 #include "Config.h" // ヘッダーファイルの読み込み
 #include <string> 
+#include <filesystem>
+
+
 
 // コマンドライン引数を解析し、入力フォルダと出力フォルダを config に設定する
 // 戻り値:
@@ -17,6 +20,20 @@ bool ConfigParser::parse(int argc, char* argv[], Config& config)
         }
         else if (arg == "--output" && i + 1 < argc) {
             config.outputDir = argv[++i];
+        }
+        else if (arg == "--rename" && i + 1 < argc) {
+            // string型に変換→char*がポインタのため
+            std::string mode = argv[++i];
+
+            if (mode == "keep") {
+                config.renameMode = RenameMode::Keep;
+            }
+            else if (mode == "seq") {
+                config.renameMode = RenameMode::Seq;
+            }
+        }
+        else if (arg == "--prefix" && i + 1 < argc) {
+            config.prefix = argv[++i];
         }
     }
     // inputDir と outputDir の両方が空でなければ解析成功とみなす
