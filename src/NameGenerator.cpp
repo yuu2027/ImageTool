@@ -27,6 +27,8 @@ std::filesystem::path NameGenerator::generate(const std::filesystem::path& input
         fileName = makeSeqName(inputFile);
     }
 
+    fileName = avoidCollision(fileName);
+
     return outputDir_ / fileName;
 }
 
@@ -46,4 +48,23 @@ std::string NameGenerator::makeSeqName(const std::filesystem::path& inputFile)
     std::string ext = inputFile.extension().string();
     ++sequence_;
     return oss.str() + ext;
+}
+
+std::string NameGenerator::avoidCollision(const std::string& fileName)
+{
+    std::filesystem::path p(fileName);
+    std::string stem = p.stem().string();
+    std::string ext = p.extension().string();
+
+    std::string candidate = fileName;
+    int counter = 1;
+
+    while (reservedNames_.count(candidate) > 0 ||
+        std::filesystem::exists(outputDir_ / candidate)) {
+        candidate = stem + "_" + std::to_string(counter) + ext;
+        ++counter;
+    }
+
+    reservedNames_.insert(candidate);
+    return candidate;
 }
