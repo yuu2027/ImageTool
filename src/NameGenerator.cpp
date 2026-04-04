@@ -1,8 +1,34 @@
 #include "NameGenerator.h"
+#include "Config.h"
+#include "Logger.h"
 #include <filesystem>
 #include <sstream> // 文字列を入出力の対象として扱うためのライブラリ
+#include <iomanip>
 
 namespace fs = std::filesystem;
+
+namespace {
+    // 文字列を小文字に変換して返す関数
+    std::string toLowerCopy(std::string s)
+    {
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return s;
+    }
+
+    // ユーザーが指定した形式文字列を、実際の拡張子表記に正規化する関数
+    std::string normalizeFormatExtension(const std::string& format)
+    {
+        std::string f = toLowerCopy(format);
+
+        if (f.empty()) return "";
+        if (f == "jpg" || f == "jpeg") return ".jpg";
+        if (f == "png") return ".png";
+        if (f == "bmp") return ".bmp";
+        if (f == "eps") return ".eps";
+
+        return "";
+    }
+}
 
 // コンストラクタ
 // config からリネーム方法やプレフィックスを受け取り、
@@ -11,7 +37,8 @@ NameGenerator::NameGenerator(const Config& config, const std::filesystem::path& 
     : outputDir_(outputDir),        // 出力フォルダを保存 
     renameMode_(config.renameMode), // keep / seq などの命名モードを保存
     prefix_(config.prefix),         // keep モード時などに使うプレフィックスを保存
-    sequence_(1)                    // 連番の開始値を 1 にする
+    sequence_(1),                   // 連番の開始値を 1 にする
+    format_(config.format)
 {
 }
 
@@ -34,13 +61,13 @@ std::filesystem::path NameGenerator::generate(const std::filesystem::path& input
 std::string NameGenerator::makeKeepName(const std::filesystem::path& inputFile) const
 {
     std::string stem = inputFile.stem().string(); // 拡張子を除いた本体部分
-    std::string ext = inputFile.extension().string(); // ファイルの拡張子
+    std::string ext = getOutputExtension(inputFile); // ファイルの拡張子
     return prefix_ + stem + ext;
 }
 
 std::string NameGenerator::makeSeqName(const std::filesystem::path& inputFile)
 {
-    std::string ext = inputFile.extension().string();
+    std::string ext = getOutputExtension(inputFile); // ファイルの拡張子
 
     while (true) {
         std::ostringstream oss;
@@ -77,4 +104,17 @@ std::string NameGenerator::avoidCollision(const std::string& fileName)
 
     reservedNames_.insert(candidate);
     return candidate;
+}
+
+// 拡張子を変換
+std::string NameGenerator::getOutputExtension(const fs::path& inputFile) const
+{
+    std::string forcedExt = normalizeFormatExtension(format_);
+    if (!forcedExt.empty()) {
+        return forcedExt;
+    }
+
+    std::string inputExt = inputFile.extension().string(); // 拡張子
+    // 小文字に変換
+    return toLowerCopy(inputExt);
 }

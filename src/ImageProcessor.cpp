@@ -44,22 +44,66 @@ bool ImageProcessor::save(const fs::path& outputPath, const cv::Mat& image) cons
         return false;
     }
 
-    // parent_path：親フォルダ部分を取り出す
-    fs::path parent = outputPath.parent_path();
-    if (!parent.empty() && !fs::exists(parent)) {
-        fs::create_directories(parent);
+    try {
+        // parent_path：親フォルダ部分を取り出す
+        fs::path parent = outputPath.parent_path();
+
+        if (!parent.empty()) {
+            if (fs::exists(parent) && !fs::is_directory(parent)) {
+                Logger::error("出力先の親パスがフォルダではありません: " + parent.string());
+                return false;
+            }
+
+            if (!fs::exists(parent)) {
+                fs::create_directories(parent);
+            }
+        }
+
+        std::string ext = outputPath.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        if (ext.empty()) {
+            Logger::error("出力ファイルの拡張子がありません: " + outputPath.string());
+            return false;
+        }
+
+        cv::Mat outputImage = image;
+
+        // JPEG保存時のチャンネル調整
+        if (ext == ".jpg" || ext == ".jpeg") {
+            if (image.channels() == 4) {
+                cv::cvtColor(image, outputImage, cv::COLOR_BGRA2BGR);
+            }
+            else if (image.channels() == 1) {
+                // 必要なら3ch化してもよい
+                // cv::cvtColor(image, outputImage, cv::COLOR_GRAY2BGR);
+            }
+        }
+
+        bool ok = cv::imwrite(outputPath.string(), outputImage);
+
+        if (ok) {
+            Logger::info("画像を保存しました: " + outputPath.string());
+        }
+        else {
+            Logger::error("画像を保存できませんでした: " + outputPath.string());
+        }
+
+        return ok;
     }
-
-    // imwrite：画像をファイルとして保存する関数
-    bool ok = cv::imwrite(outputPath.string(), image);
-
-    if (!ok) {
-        Logger::error("画像を保存できませんでした: " + outputPath.string());
+    catch (const cv::Exception& e) {
+        Logger::error("OpenCVエラーで保存に失敗しました: " + std::string(e.what()));
         return false;
     }
-
-    Logger::info("画像を保存しました: " + outputPath.string());
-    return true;
+    catch (const std::exception& e) {
+        Logger::error("例外により保存に失敗しました: " + std::string(e.what()));
+        return false;
+    }
+    catch (...) {
+        Logger::error("不明な例外により保存に失敗しました: " + outputPath.string());
+        return false;
+    }
 }
 
 cv::Mat ImageProcessor::transform(const cv::Mat& image, const Config& config)
