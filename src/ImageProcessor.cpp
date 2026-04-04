@@ -70,9 +70,29 @@ cv::Mat ImageProcessor::transform(const cv::Mat& image, const Config& config)
 
     cv::Mat result = image.clone();
 
+    // リサイズ変換
     if (config.resizeLongSide > 0) {
         result = resizeKeepAspect(result, config.resizeLongSide);
     }
+
+    // グレースケール変換
+    if (config.grayscale) {
+        // channels：画像が何チャンネルかを返す関数
+        // cv::cvtColor()：カラー画像をグレースケール画像に変換する関数
+        if (result.channels() == 3) {
+            cv::cvtColor(result, result, cv::COLOR_BGR2GRAY);
+        }
+        else if (result.channels() == 4) {
+            cv::cvtColor(result, result, cv::COLOR_BGRA2GRAY);
+        }
+        else if (result.channels() == 1) {
+            // すでにグレースケールなので何もしない
+        }
+        else {
+            Logger::error("未対応のチャンネル数です: " + std::to_string(result.channels()));
+        }
+    }
+
 
     return result;
 }

@@ -16,7 +16,9 @@ struct Config { // アプリケーションの実行設定を保持する構造体
     RenameMode renameMode = RenameMode::Keep;
     std::string prefix;
 
-    int resizeLongSide = 0; // 0ならリサイズしない
+    int resizeLongSide = 0; // リサイズ変換
+    bool grayscale = false; // グレースケール変換
+    std::string format;
 };
 
 class ConfigParser { // コマンドライン引数を解析して Config を構築するクラス
