@@ -35,6 +35,15 @@ bool ConfigParser::parse(int argc, char* argv[], Config& config)
         else if (arg == "--prefix" && i + 1 < argc) {
             config.prefix = argv[++i];
         }
+        else if (arg == "--resize") {
+            try {
+                config.resizeLongSide = std::stoi(argv[++i]); //•¶Žš—ñ‚ð®”‚É•ÏŠ·
+            }
+            catch (...) {
+                return false;
+            }
+            
+        }
     }
     // inputDir ‚Æ outputDir ‚Ì—¼•û‚ª‹ó‚Å‚È‚¯‚ê‚Î‰ðÍ¬Œ÷‚Æ‚Ý‚È‚·
     return !config.inputDir.empty() && !config.outputDir.empty();

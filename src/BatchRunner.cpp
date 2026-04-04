@@ -67,7 +67,7 @@ bool BatchRunner::run(const Config& config)
         fs::path outputPath = generator.generate(file);
 
         cv::Mat image = processor.load(file);
-        cv::Mat result = processor.transform(image);
+        cv::Mat result = processor.transform(image, config);
         if (!processor.save(outputPath, result)) Logger::error("ˆ—¸”s: " + file.string());
     }
 

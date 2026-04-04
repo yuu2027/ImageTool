@@ -1,7 +1,8 @@
 #include "ImageProcessor.h"
 #include "Logger.h"
 #include <filesystem>
-#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgcodecs.hpp> // 画像ファイルの読み書き用
+#include <opencv2/opencv.hpp> // OpenCV のまとめヘッダ(Mat, resize, Size, INTER_AREAなど)
 
 namespace fs = std::filesystem;
 
@@ -61,8 +62,70 @@ bool ImageProcessor::save(const fs::path& outputPath, const cv::Mat& image) cons
     return true;
 }
 
-cv::Mat ImageProcessor::transform(const cv::Mat& image) const
+cv::Mat ImageProcessor::transform(const cv::Mat& image, const Config& config)
 {
-    // clone：画像データを完全に複製する関数
-    return image.clone();
+    if (image.empty()) {
+        return image;
+    }
+
+    cv::Mat result = image.clone();
+
+    if (config.resizeLongSide > 0) {
+        result = resizeKeepAspect(result, config.resizeLongSide);
+    }
+
+    return result;
+}
+
+// 画像の縦横比を保ったまま、長辺が targetLongSide になるように縮小する処理
+cv::Mat ImageProcessor::resizeKeepAspect(const cv::Mat& image, int targetLongSide)
+{
+    if (image.empty()) {
+        return image;
+    }
+
+    int width = image.cols; // 画像の横幅
+    int height = image.rows; // 画像の高さ
+    int longSide = std::max(width, height); // 幅と高さのうち，大きい方を長編として設定
+
+    // リサイズ無効、または拡大になってしまう場合はそのまま返す
+    if (targetLongSide <= 0 || longSide <= targetLongSide) {
+
+        Logger::info(
+            "resize skipped: " +
+            std::to_string(width) + "x" + std::to_string(height)
+        );
+
+        return image.clone();
+    }
+
+    // 縮小倍率を求める
+    // static_cast<double>：doubleに変換
+    double scale = static_cast<double>(targetLongSide) / static_cast<double>(longSide);
+
+    // 新しい幅と高さを計算
+    // round(..)：少数を四捨五入
+    int newWidth = static_cast<int>(std::round(width * scale));
+    int newHeight = static_cast<int>(std::round(height * scale));
+
+    // 念のため 1 未満を防ぐ
+    newWidth = std::max(1, newWidth);
+    newHeight = std::max(1, newHeight);
+
+    cv::Mat resized;
+
+    // 画像をリサイズ
+    // resize(..)：OpenCV の画像サイズ変更関数
+    // cv::resize(入力画像, 出力画像, 新サイズ, fx, fy, 補間方法)
+    // cv::INTER_AREA：もっとも単純．速いが荒くなりやすい
+    cv::resize(image, resized, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_AREA);
+
+    Logger::info(
+        "resize: " +
+        std::to_string(width) + "x" + std::to_string(height) +
+        " -> " +
+        std::to_string(newWidth) + "x" + std::to_string(newHeight)
+    );
+
+    return resized;
 }
