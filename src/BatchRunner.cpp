@@ -61,13 +61,6 @@ bool BatchRunner::run(const Config& config)
 
     NameGenerator generator(config, config.outputDir);
 
-    if (config.renameMode == RenameMode::Keep) {
-        std::cout << "Keep" << std::endl;
-    }
-    else {
-        std::cout << "Seq" << std::endl;
-    }
-
     for (const auto& file : files) {
         Logger::info("Œ©‚Â‚©‚Á‚½‰æ‘œ: " + file.string());
 

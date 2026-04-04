@@ -22,12 +22,11 @@ std::filesystem::path NameGenerator::generate(const std::filesystem::path& input
 
     if (renameMode_ == RenameMode::Keep) {
         fileName = makeKeepName(inputFile);
+        fileName = avoidCollision(fileName);
     }
     else {
         fileName = makeSeqName(inputFile);
     }
-
-    fileName = avoidCollision(fileName);
 
     return outputDir_ / fileName;
 }
@@ -41,26 +40,37 @@ std::string NameGenerator::makeKeepName(const std::filesystem::path& inputFile) 
 
 std::string NameGenerator::makeSeqName(const std::filesystem::path& inputFile)
 {
-    std::ostringstream oss;
-    // setw(4)：幅を４に指定
-    // setfill('0')：足りない部分を0で埋める
-    oss << std::setw(4) << std::setfill('0') << sequence_; 
     std::string ext = inputFile.extension().string();
-    ++sequence_;
-    return oss.str() + ext;
+
+    while (true) {
+        std::ostringstream oss;
+        // setw(4)：幅を４に指定
+        // setfill('0')：足りない部分を0で埋める
+        oss << std::setw(4) << std::setfill('0') << sequence_;
+        std::string candidate = oss.str() + ext;
+        ++sequence_;
+
+        if (reservedNames_.count(candidate) == 0 && !std::filesystem::exists(outputDir_ / candidate)) {
+            reservedNames_.insert(candidate);
+            return candidate;
+        }
+
+    }
 }
 
+// 同じ名前があるとき回避
 std::string NameGenerator::avoidCollision(const std::string& fileName)
 {
     std::filesystem::path p(fileName);
-    std::string stem = p.stem().string();
-    std::string ext = p.extension().string();
+    std::string stem = p.stem().string(); // 拡張子を除いた部分
+    std::string ext = p.extension().string(); // 拡張子
 
     std::string candidate = fileName;
     int counter = 1;
 
-    while (reservedNames_.count(candidate) > 0 ||
-        std::filesystem::exists(outputDir_ / candidate)) {
+    // reservedNames_.count(candidate)：その値があれば1無ければ0
+    // 
+    while (reservedNames_.count(candidate) > 0 || std::filesystem::exists(outputDir_ / candidate)) {
         candidate = stem + "_" + std::to_string(counter) + ext;
         ++counter;
     }
